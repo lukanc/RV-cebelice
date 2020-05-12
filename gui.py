@@ -19,8 +19,15 @@ scrollbar = Scrollbar(mainarea)
 scrollbar.pack(side=RIGHT, fill=Y)
 
 def select_file():
-    filename = filedialog.askopenfilename(title='open')
-    return filename
+    while True:
+        filename = filedialog.askopenfilename(title='open')
+        extension = os.path.splitext(filename)[1]
+        if extension != (".jpg" or ".jpeg" or ".png" or ".tiff" or ".gif"):
+            answer = messagebox.askquestion( "Napačna datoteka", "Izbrana datoteka ni slika! \n\nŽeliš izbrati novo datoteko?")
+            if answer == "no":
+                break
+        else:
+            return filename
 
 def open_img():
     filename = select_file()
