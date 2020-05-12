@@ -22,12 +22,13 @@ def select_file():
     while True:
         filename = filedialog.askopenfilename(title='open')
         extension = os.path.splitext(filename)[1]
-        if extension != (".jpg" or ".jpeg" or ".png" or ".tiff" or ".gif"):
+        if extension in ('.jpg', '.jpeg', ".png", ".tiff", ".gif"):
+            return filename
+        else:    
             answer = messagebox.askquestion( "Napačna datoteka", "Izbrana datoteka ni slika! \n\nŽeliš izbrati novo datoteko?")
             if answer == "no":
                 break
-        else:
-            return filename
+        
 
 def open_img():
     filename = select_file()
