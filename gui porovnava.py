@@ -11,20 +11,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 
-MainWindow = Tk()
-MainWindow.wm_title("Robotski vid - projekt čebelice")
-MainWindow.geometry("1280x900")
-MainWindow.resizable(width=True, height=True)
-# stranski menu z parametri ?
-sidemenu = Frame(MainWindow, width=400, bg='white', height=500, relief='sunken', borderwidth=2)
-sidemenu.pack(expand=False, fill='both', side='left', anchor='nw')
 
-# image dispaly label
-mainarea = Frame(MainWindow, bg="#CCC", width=500, height=500)
-mainarea.pack(expand=True, fill='both', side='right')
-scrollbar = Scrollbar(mainarea)
-scrollbar.pack(side=RIGHT, fill=Y)
-
+##Definicija funkcij
 
 def select_file():
     while True:
@@ -37,18 +25,6 @@ def select_file():
                                             "Izbrana datoteka ni slika! \n\nŽeliš izbrati novo datoteko?")
             if answer == "no":
                 break
-
-
-'''
-def open_img():
-    filename = select_file()
-    img = Image.open(filename)
-    img = img.resize((1680, 900), Image.ANTIALIAS)
-    img = ImageTk.PhotoImage(img)
-    panel = Label(MainWindow, image=img)
-    panel.image = img
-    panel.pack()
-'''
 
 
 def open_img():
@@ -83,6 +59,14 @@ def onclick(event):
     global coords
     coords.append((ix, iy))
 
+    # kaj želimo pokazati na platnu
+    plt.imshow(iImage)
+    plt.plot(ix, iy, 'or', markersize=5.0)
+
+    # posodobi platno/sliko
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
     global cid
     if len(coords) == 8:
         fig.canvas.mpl_disconnect(cid)
@@ -102,11 +86,31 @@ def izpis_tock():
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
-
 def _quit():
     MainWindow.quit()
     MainWindow.destroy()
 
+###################################
+
+
+MainWindow = Tk()
+MainWindow.wm_title("Robotski vid - projekt čebelice")
+MainWindow.geometry("1280x900")
+MainWindow.resizable(width=True, height=True)
+# stranski menu z parametri ?
+sidemenu = Frame(MainWindow, width=400, bg='white', height=500, relief='sunken', borderwidth=2)
+sidemenu.pack(expand=False, fill='both', side='left', anchor='nw')
+
+# image dispaly label
+mainarea = Frame(MainWindow, bg="#CCC", width=500, height=500)
+mainarea.pack(expand=True, fill='both', side='right')
+scrollbar = Scrollbar(mainarea)
+scrollbar.pack(side=RIGHT, fill=Y)
+
+# izpis = Text(sidemenu, width=50, height=15).place(x=120, y=250)
+# # izpis.grid(row=1,column=4, rowspan=10, columnspan=4)
+
+#### BUTTONS ####
 
 btn = Button(sidemenu, text='Izberi sliko', command=open_img, width=20, height=3).place(x=120, y=50)
 
