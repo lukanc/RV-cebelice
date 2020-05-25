@@ -53,18 +53,20 @@ def open_img():
 
 def open_img():
     filename = select_file()
+    global iImage
     iImage = np.array(im.open(filename))
     global fig
     fig = plt.figure(figsize=(5, 4), dpi=100)
     plt.imshow(iImage)
-
+    global canvas
+    global toolbar
     canvas = FigureCanvasTkAgg(fig, master=mainarea)
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
     toolbar = NavigationToolbar2Tk(canvas, mainarea)
     toolbar.update()
-    canvas.get_tk_widget(sidemenu=TOP, fill=BOTH, expand=1)
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 def oznake3x3():
     global coords
@@ -91,6 +93,15 @@ def izpis_tock():
     array_coords = np.array(coords)
     print(array_coords.shape)
     print(array_coords)
+
+    #kaj želimo pokazati na platnu
+    plt.imshow(iImage)
+    plt.plot(array_coords[:, 0], array_coords[:, 1], 'or', markersize=5.0)
+
+    #posodobi platno/sliko
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
 
 def _quit():
     MainWindow.quit()
