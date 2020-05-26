@@ -135,7 +135,7 @@ def porovnava():
                                    range(iImage.shape[0]),
                                    sparse=False, indexing='xy')
 
-    Calibimage = geomCalibImageRGB(iParOpt, iImage, iCoorXx, iCoorYy, 5)
+    Calibimage = geomCalibImageRGB(iParOpt, iImage, iCoorXx, iCoorYy, 15)
 
     # doloci napako z danimi parametri
     oErr2_domaca = geomCalibErr(iParOpt, iCoorU, iCoorV, iCoorX, iCoorY)
