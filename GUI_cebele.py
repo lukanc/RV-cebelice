@@ -12,6 +12,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.backend_bases import key_press_handler
 sys.path.append("/Users/tilenkocevar/Documents/FAKS/Robotika/1.letnik/2.semester/Robotski vid/projekt - cebele/")
 from knjiznica import *
+import scipy.misc
+import imageio
+
 
 ##Definicija funkcij
 
@@ -103,12 +106,16 @@ def porovnava():
 
     iCoorU = array_coords[:, 0].flatten()
     iCoorV = array_coords[:, 1].flatten()
+    ##velikost satja
+
+    y_smer_velikost_satja = 3840
+    x_smer_velikost_satja =2260
 
     # koordinate kalibra v metricnem prostoru
-    iCoorX = np.array([1, 2, 3, 3, 3, 2, 1, 1])
-    iCoorY = np.array([1, 1, 1, 3, 5, 5, 5, 3])
+    iCoorX = np.array([0, x_smer_velikost_satja/2, x_smer_velikost_satja, x_smer_velikost_satja, x_smer_velikost_satja, x_smer_velikost_satja/2, 0, 0])
+    iCoorY = np.array([0, 0, 0, y_smer_velikost_satja/2, y_smer_velikost_satja, y_smer_velikost_satja, y_smer_velikost_satja, y_smer_velikost_satja/2])
 
-    k = 50
+    k = 1
     iCoorX= iCoorX * k
     iCoorY = iCoorY * k
 
@@ -135,7 +142,12 @@ def porovnava():
                                    range(iImage.shape[0]),
                                    sparse=False, indexing='xy')
 
-    Calibimage = geomCalibImageRGB(iParOpt, iImage, iCoorXx, iCoorYy, 15)
+    print("XX:", iCoorXx.shape)
+    print("YY", iCoorYy.shape)
+    global Calibimage
+    Calibimage = geomCalibImageRGB(iParOpt, iImage, iCoorXx, iCoorYy, 1)
+
+    ##384 x 226 mm velikost panja
 
     # doloci napako z danimi parametri
     oErr2_domaca = geomCalibErr(iParOpt, iCoorU, iCoorV, iCoorX, iCoorY)
@@ -147,6 +159,30 @@ def porovnava():
     # posodobi platno/sliko
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
+def Enhance_linear():
+    # iImage = cv.cvtColor(iImage, cv.COLOR_BGR2RGB)
+    maska = enhanceLinear(iImage, 6, 10)
+    slika = iImage
+    slika[:, :, 0] = np.where(maska > 0, 255, slika[:, :, 0])
+
+    # kaj želimo pokazati na platnu
+    plt.imshow(slika)
+
+    # posodobi platno/sliko
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
+def savefile():
+    filename = filedialog.asksaveasfile(mode='w', defaultextension=".jpeg")
+    if not filename:
+        return
+    Calibimage_shrani = im.fromarray(Calibimage)
+    Calib_shrani = Calibimage_shrani.astype('int32')
+
+    Calib_shrani.save(filename)
+    # Calib_shrani.tofile(filename)
+
 
 def _quit():
     global MainWin
@@ -197,12 +233,25 @@ class CebeleGUI:
         self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
         self.button_porovnava.place(x=120, y=250)
 
+        ## 7
+        self.button_maska = Button(sidemenu, text="pokazi masko", command=self.potrdi_maska, width=20, height=3)
+        self.button_maska.place(x=120, y=310)
+
+        ## 8
+        self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
+        self.button_save_img.place(x=120, y=380)
+
+
     ### Definiranje kaj izvede vsak gumb ###
     def open_image(self):
         open_img()
         self.izpis.insert(END, 'Odprta slika\n')
         self.izpis.insert(END, filename)
         self.izpis.insert(END, '\n')
+
+    def save_img(self):
+        savefile()
+        self.izpis.insert(END, 'slika je shranjena\n')
 
     def potrdi_oznake3x3(self):
         oznake3x3()
@@ -216,6 +265,9 @@ class CebeleGUI:
     def potrdi_porovnava(self):
         porovnava()
         self.izpis.insert(END, 'Izvedli ste porovnavo\n')
+
+    def potrdi_maska(self):
+        Enhance_linear()
 
     def potrdi_quit(self):
         _quit()
