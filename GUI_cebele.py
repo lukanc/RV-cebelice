@@ -14,6 +14,9 @@ sys.path.append("/Users/tilenkocevar/Documents/FAKS/Robotika/1.letnik/2.semester
 from knjiznica import *
 import scipy.misc
 import imageio
+import cv2 as cv
+from PIL import Image
+
 
 
 ##Definicija funkcij
@@ -36,6 +39,7 @@ def open_img():
     filename = select_file()
     global iImage
     iImage = np.array(im.open(filename))
+    print('tip ob odpiranju', iImage.dtype)
     global fig
     fig = plt.figure(figsize=(5, 4), dpi=100)
     plt.imshow(iImage)
@@ -92,6 +96,9 @@ def izpis_tock():
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 def porovnava():
+    global iImage
+    # print('tip v porovnavi:', iImage.dtype)
+    iImage = np.asanyarray(iImage)
     iCalImageG = colorToGray(iImage)
     # koordinate v prostoru slike
     array_coords= np.array([[ 710.16264541,  522.88425555],
@@ -149,10 +156,6 @@ def porovnava():
 
     ##384 x 226 mm velikost panja
 
-    # doloci napako z danimi parametri
-    oErr2_domaca = geomCalibErr(iParOpt, iCoorU, iCoorV, iCoorX, iCoorY)
-
-    print('napaka v dolžini: ', oErr2_domaca / 5, 'mm')
     # kaj želimo pokazati na platnu
     plt.imshow(Calibimage)
 
@@ -161,27 +164,49 @@ def porovnava():
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 def Enhance_linear():
-    # iImage = cv.cvtColor(iImage, cv.COLOR_BGR2RGB)
-    maska = enhanceLinear(iImage, 6, 10)
-    slika = iImage
-    slika[:, :, 0] = np.where(maska > 0, 255, slika[:, :, 0])
+    # iImage = cv.cvtColor(Calibimage, cv.COLOR_RGB2GRAY)
+    # maska = enhanceLinear(iImage, 6, 10)
+    # slika = iImage
+    # slika[:, :, 0] = np.where(maska > 0, 255, slika[:, :, 0])
+
+    imgG = cv.cvtColor(iImage, cv.COLOR_RGB2GRAY)
+    imgGam = gammaImage(imgG, 3)
+
+    harris = cv.cornerHarris(imgGam, 30, 5, k=0.05)
+    harris = np.uint8((harris * 255) * 150)
+
 
     # kaj želimo pokazati na platnu
-    plt.imshow(slika)
+    plt.imshow(harris)
 
     # posodobi platno/sliko
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 def savefile():
-    filename = filedialog.asksaveasfile(mode='w', defaultextension=".jpeg")
+    filename = filedialog.asksaveasfile(mode='w', defaultextension=".png")
     if not filename:
         return
-    Calibimage_shrani = im.fromarray(Calibimage)
-    Calib_shrani = Calibimage_shrani.astype('int32')
+    Calibimage_shrani = np.array(Calibimage)
+    Calibimage_shrani = Calibimage_shrani.astype(dtype='uint8')
 
-    Calib_shrani.save(filename)
-    # Calib_shrani.tofile(filename)
+    Calibimage_shrani.tofile(filename)
+    print(Calibimage_shrani.dtype)
+    ime = PIL.Image.s
+    Calibimage_shrani.save(filename)
+
+
+def rotation(i):
+    global iImage
+    iImage = Image.open(filename)
+    iImage = iImage.rotate(i, expand=1)
+
+    # kaj želimo pokazati na platnu
+    plt.imshow(iImage)
+
+    # posodobi platno/sliko
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 
 def _quit():
@@ -207,6 +232,7 @@ class CebeleGUI:
         mainarea.pack(expand=True, fill='both', side='right')
         scrollbar = Scrollbar(mainarea)
         scrollbar.pack(side=RIGHT, fill=Y)
+
 
         #### BUTTONS ####
         ## 1
@@ -241,6 +267,18 @@ class CebeleGUI:
         self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
         self.button_save_img.place(x=120, y=380)
 
+        ## 9
+        self.button_rotate_img = Button(sidemenu, text="Zarotiraj sliko", command=self.rotate, width=20, height=3)
+        self.button_rotate_img.place(x=120, y=540)
+
+        ## 10
+        self.ime_st_rotacij = Label(sidemenu, text="Vnesi stopinje rotacije").place(x=120, y=450)
+
+        ## 11
+        self.vnos_st_rotacij = Entry(sidemenu)
+        self.vnos_st_rotacij.place(x=120, y=500)
+
+
 
     ### Definiranje kaj izvede vsak gumb ###
     def open_image(self):
@@ -268,6 +306,14 @@ class CebeleGUI:
 
     def potrdi_maska(self):
         Enhance_linear()
+
+    def rotate(self):
+        st_rotacij = self.vnos_st_rotacij.get()
+        st_rotacij = int(st_rotacij)
+        rotation(st_rotacij)
+        self.izpis.insert(END, 'Izvedli rotacijo za: ')
+        self.izpis.insert(END, st_rotacij)
+        self.izpis.insert(END, ' stopinj\n')
 
     def potrdi_quit(self):
         _quit()
