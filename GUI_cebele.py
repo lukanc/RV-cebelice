@@ -88,6 +88,9 @@ def izpis_tock():
     print(array_coords.shape)
     print(array_coords)
 
+    ##pocistimo prejsno sliko ki je pikazana
+    plt.clf()
+
     #kaj želimo pokazati na platnu
     plt.imshow(iImage)
     plt.plot(array_coords[:, 0], array_coords[:, 1], 'or', markersize=5.0)
@@ -102,14 +105,14 @@ def porovnava():
     iImage = np.asanyarray(iImage)
     iCalImageG = colorToGray(iImage)
     # koordinate v prostoru slike
-    array_coords= np.array([[ 710.16264541,  522.88425555],
-                    [1406.21730166,  437.40385917],
-                     [2419.77057303,  376.34643319],
-                     [2334.29017665, 1994.36822183],
-                     [2254.91552287, 3862.72545701],
-                     [1223.0450237,  3673.44743645],
-                     [ 380.45254509, 3502.48664369],
-                     [ 557.51908045, 1939.41653844]])
+    # array_coords= np.array([[ 710.16264541,  522.88425555],
+    #                 [1406.21730166,  437.40385917],
+    #                  [2419.77057303,  376.34643319],
+    #                  [2334.29017665, 1994.36822183],
+    #                  [2254.91552287, 3862.72545701],
+    #                  [1223.0450237,  3673.44743645],
+    #                  [ 380.45254509, 3502.48664369],
+    #                  [ 557.51908045, 1939.41653844]])
     print(array_coords.shape)
 
     iCoorU = array_coords[:, 0].flatten()
@@ -154,10 +157,12 @@ def porovnava():
     print("YY", iCoorYy.shape)
     global Calibimage
     Calibimage = geomCalibImageRGB(iParOpt, iImage, iCoorXx, iCoorYy, 1)
-
+    # global canvas
+    # canvas.delete()
     ##384 x 226 mm velikost panja
 
     # kaj želimo pokazati na platnu
+    plt.clf()
     plt.imshow(Calibimage)
 
     # posodobi platno/sliko
@@ -176,7 +181,8 @@ def Enhance_linear():
     harris = cv.cornerHarris(imgGam, 30, 5, k=0.05)
     harris = np.uint8((harris * 255) * 150)
 
-
+    ##pocistimo prejsno sliko ki je pikazana
+    plt.clf()
     # kaj želimo pokazati na platnu
     plt.imshow(harris)
 
@@ -199,7 +205,8 @@ def rotation(i):
     global iImage
     iImage = Image.open(filename)
     iImage = iImage.rotate(i, expand=1)
-
+    ##pocistimo prejsno sliko ki je pikazana
+    plt.clf()
     # kaj želimo pokazati na platnu
     plt.imshow(iImage)
 
@@ -221,61 +228,64 @@ class CebeleGUI:
         MainWin.geometry("1280x900")
         MainWin.resizable(width=True, height=True)
         # stranski menu z parametri ?
-        sidemenu = Frame(MainWin, width=400, bg='white', height=500, relief='sunken', borderwidth=2)
+        sidemenu = Frame(MainWin, width=400, bg='white', height=600, relief='sunken', borderwidth=2)
         sidemenu.pack(expand=False, fill='both', side='left', anchor='nw')
+
 
         # image dispaly label
         global mainarea
         global scrollbar
-        mainarea = Frame(MainWin, bg="#CCC", width=500, height=500)
+        mainarea = Frame(MainWin, bg="#CCC", width=800, height=500)
         mainarea.pack(expand=True, fill='both', side='right')
         scrollbar = Scrollbar(mainarea)
         scrollbar.pack(side=RIGHT, fill=Y)
 
+        x_smer_gumbi = 120
+        razmak = 65
 
         #### BUTTONS ####
         ## 1
         self.ime_datoteke_button = Button(sidemenu, text='Izberi sliko', command=self.open_image, width=20, height=3)
-        self.ime_datoteke_button.place(x=120, y=50)
+        self.ime_datoteke_button.place(x=x_smer_gumbi, y=razmak)
 
         ## 2
-        self.button_oznake3x3 = Button(sidemenu, text='Oznaci tocke', command=self.potrdi_oznake3x3, width=20, height=3)
-        self.button_oznake3x3.place(x=120, y=120)
+        self.ime_st_rotacij = Label(sidemenu, text="Vnesi stopinje rotacije").place(x=x_smer_gumbi, y=razmak*2)
 
         ## 3
-        self.button_izpis_tock = Button(sidemenu, text='Izpisi tocke', command=self.potrdi_izpis_tock, width=20, height=3)
-        self.button_izpis_tock.place(x=120, y=190)
+        self.vnos_st_rotacij = Entry(sidemenu)
+        self.vnos_st_rotacij.place(x=x_smer_gumbi, y=razmak*2.5)
 
         ## 4
-        self.button_quit = Button(master=mainarea, text="Quit", command=self.potrdi_quit)
-        self.button_quit.pack(side=BOTTOM)
+        self.button_rotate_img = Button(sidemenu, text="Zarotiraj sliko", command=self.rotate, width=20, height=3)
+        self.button_rotate_img.place(x=x_smer_gumbi, y=razmak*3)
 
         ## 5
-        self.izpis = Text(sidemenu, width=50, height=15)
-        self.izpis.place (x=20, y= 700)
+        self.button_oznake3x3 = Button(sidemenu, text='Oznaci tocke', command=self.potrdi_oznake3x3, width=20, height=3)
+        self.button_oznake3x3.place(x=x_smer_gumbi, y=razmak*4)
 
         ## 6
-        self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
-        self.button_porovnava.place(x=120, y=250)
+        self.button_izpis_tock = Button(sidemenu, text='Izpisi tocke', command=self.potrdi_izpis_tock, width=20, height=3)
+        self.button_izpis_tock.place(x=x_smer_gumbi, y=razmak*5)
 
         ## 7
-        self.button_maska = Button(sidemenu, text="pokazi masko", command=self.potrdi_maska, width=20, height=3)
-        self.button_maska.place(x=120, y=310)
+        self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
+        self.button_porovnava.place(x=x_smer_gumbi, y=razmak*6)
 
         ## 8
-        self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
-        self.button_save_img.place(x=120, y=380)
+        self.button_maska = Button(sidemenu, text="pokazi masko", command=self.potrdi_maska, width=20, height=3)
+        self.button_maska.place(x=x_smer_gumbi, y=razmak*7)
 
         ## 9
-        self.button_rotate_img = Button(sidemenu, text="Zarotiraj sliko", command=self.rotate, width=20, height=3)
-        self.button_rotate_img.place(x=120, y=540)
+        self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
+        self.button_save_img.place(x=x_smer_gumbi, y=razmak*8)
 
-        ## 10
-        self.ime_st_rotacij = Label(sidemenu, text="Vnesi stopinje rotacije").place(x=120, y=450)
+        ## END
+        self.izpis = Text(sidemenu, width=50, height=15)
+        self.izpis.place(x=x_smer_gumbi/5, y=razmak * 10)
 
-        ## 11
-        self.vnos_st_rotacij = Entry(sidemenu)
-        self.vnos_st_rotacij.place(x=120, y=500)
+        ## QUIT
+        self.button_quit = Button(master=mainarea, text="Quit", command=self.potrdi_quit)
+        self.button_quit.pack(side=BOTTOM)
 
 
 
@@ -288,10 +298,16 @@ class CebeleGUI:
 
     def save_img(self):
         savefile()
-        self.izpis.insert(END, 'slika je shranjena\n')
+        self.izpis.insert(END, 'Slika je shranjena\n')
 
     def potrdi_oznake3x3(self):
         oznake3x3()
+        self.izpis.insert(END, 'Oznacite tocke po vrstnm redu:\n')
+        self.izpis.insert(END, '#1 #2 #3\n')
+        self.izpis.insert(END, '\n')
+        self.izpis.insert(END, '#8    #4\n')
+        self.izpis.insert(END, '\n')
+        self.izpis.insert(END, '#7 #6 #5\n')
 
     def potrdi_izpis_tock(self):
         izpis_tock()
