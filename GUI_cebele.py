@@ -7,6 +7,7 @@ import PIL.Image as im
 import os
 import numpy as np
 from matplotlib.figure import Figure
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
@@ -15,7 +16,7 @@ from knjiznica import *
 import scipy.misc
 import imageio
 import cv2 as cv
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 
@@ -184,17 +185,15 @@ def Enhance_linear():
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 def savefile():
-    filename = filedialog.asksaveasfile(mode='w', defaultextension=".png")
-    if not filename:
+    filename_save = filedialog.asksaveasfilename(defaultextension=".png")
+    if not filename_save:
         return
-    Calibimage_shrani = np.array(Calibimage)
-    Calibimage_shrani = Calibimage_shrani.astype(dtype='uint8')
+    Calibimage.astype(np.uint8)
+    Calibimage_shrani = np.asanyarray(Calibimage)
 
-    Calibimage_shrani.tofile(filename)
-    print(Calibimage_shrani.dtype)
-    ime = PIL.Image.s
-    Calibimage_shrani.save(filename)
-
+    im = Image.fromarray((Calibimage_shrani * 255).astype(np.uint8))
+    im = ImageOps.invert(im)
+    im.save(filename_save)
 
 def rotation(i):
     global iImage
