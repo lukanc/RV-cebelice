@@ -41,18 +41,16 @@ def open_img():
     global iImage
     iImage = np.array(im.open(filename))
     print('tip ob odpiranju', iImage.dtype)
-    global fig
-    fig = plt.figure(figsize=(5, 4), dpi=100)
+
+    ##pocistimo prejsno sliko ki je pikazana
+    plt.clf()
+    # kaj želimo pokazati na platnu
     plt.imshow(iImage)
-    global canvas
-    global toolbar
-    canvas = FigureCanvasTkAgg(fig, master=mainarea)
+
+    # posodobi platno/sliko
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
-    toolbar = NavigationToolbar2Tk(canvas, mainarea)
-    toolbar.update()
-    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 def oznake3x3():
     global coords
@@ -105,14 +103,14 @@ def porovnava():
     iImage = np.asanyarray(iImage)
     iCalImageG = colorToGray(iImage)
     # koordinate v prostoru slike
-    # array_coords= np.array([[ 710.16264541,  522.88425555],
-    #                 [1406.21730166,  437.40385917],
-    #                  [2419.77057303,  376.34643319],
-    #                  [2334.29017665, 1994.36822183],
-    #                  [2254.91552287, 3862.72545701],
-    #                  [1223.0450237,  3673.44743645],
-    #                  [ 380.45254509, 3502.48664369],
-    #                  [ 557.51908045, 1939.41653844]])
+    array_coords= np.array([[ 710.16264541,  522.88425555],
+                    [1406.21730166,  437.40385917],
+                     [2419.77057303,  376.34643319],
+                     [2334.29017665, 1994.36822183],
+                     [2254.91552287, 3862.72545701],
+                     [1223.0450237,  3673.44743645],
+                     [ 380.45254509, 3502.48664369],
+                     [ 557.51908045, 1939.41653844]])
     print(array_coords.shape)
 
     iCoorU = array_coords[:, 0].flatten()
@@ -215,6 +213,31 @@ def rotation(i):
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 
+def Izracun():
+    i = 0
+    global iImage
+    r = iImage[:, :, 0]
+    g = iImage[:, :, 1]
+    b = iImage[:, :, 2]
+
+    spodnja_meja = 50
+    zgornja_meja = 150
+
+    i = ((spodnja_meja < iImage[:, :, 0]) & (iImage[:, :, 0] < zgornja_meja) &
+         (spodnja_meja < iImage[:, :, 1]) & (iImage[:, :, 1] < zgornja_meja) &
+         (spodnja_meja < iImage[:, :, 2]) & (iImage[:, :, 2] < zgornja_meja)).sum()
+
+
+    # for i in range(len(r)):
+    #     if r < 120 & r > 80 & g < 120 & g > 80 & b < 120 & b > 80:
+    #         i = i + 1
+
+    st_pixlu = (iImage.size)/3
+    print(st_pixlu)
+    print(i)
+    razmerje = (i/st_pixlu)*100
+    print("razmerje:", razmerje)
+
 def _quit():
     global MainWin
     okno.quit()
@@ -239,6 +262,18 @@ class CebeleGUI:
         mainarea.pack(expand=True, fill='both', side='right')
         scrollbar = Scrollbar(mainarea)
         scrollbar.pack(side=RIGHT, fill=Y)
+
+        global fig
+        fig = plt.figure(figsize=(5, 4), dpi=100)
+        global canvas
+        global toolbar
+        canvas = FigureCanvasTkAgg(fig, master=mainarea)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, mainarea)
+        toolbar.update()
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
         x_smer_gumbi = 120
         razmak = 65
@@ -278,6 +313,10 @@ class CebeleGUI:
         ## 9
         self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
         self.button_save_img.place(x=x_smer_gumbi, y=razmak*8)
+
+        ## 10
+        self.button_izracun = Button(sidemenu, text="Izracun", command=self.potrdi_izracun, width=20, height=3)
+        self.button_izracun.place(x=x_smer_gumbi, y=razmak * 9)
 
         ## END
         self.izpis = Text(sidemenu, width=50, height=15)
@@ -329,6 +368,10 @@ class CebeleGUI:
         self.izpis.insert(END, 'Izvedli rotacijo za: ')
         self.izpis.insert(END, st_rotacij)
         self.izpis.insert(END, ' stopinj\n')
+
+    def potrdi_izracun(self):
+        Izracun()
+        self.izpis.insert(END, 'Izvedli  izracun: ')
 
     def potrdi_quit(self):
         _quit()
