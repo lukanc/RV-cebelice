@@ -103,14 +103,14 @@ def porovnava():
     iImage = np.asanyarray(iImage)
     iCalImageG = colorToGray(iImage)
     # koordinate v prostoru slike
-    array_coords= np.array([[ 710.16264541,  522.88425555],
-                    [1406.21730166,  437.40385917],
-                     [2419.77057303,  376.34643319],
-                     [2334.29017665, 1994.36822183],
-                     [2254.91552287, 3862.72545701],
-                     [1223.0450237,  3673.44743645],
-                     [ 380.45254509, 3502.48664369],
-                     [ 557.51908045, 1939.41653844]])
+    # array_coords= np.array([[ 710.16264541,  522.88425555],
+    #                 [1406.21730166,  437.40385917],
+    #                  [2419.77057303,  376.34643319],
+    #                  [2334.29017665, 1994.36822183],
+    #                  [2254.91552287, 3862.72545701],
+    #                  [1223.0450237,  3673.44743645],
+    #                  [ 380.45254509, 3502.48664369],
+    #                  [ 557.51908045, 1939.41653844]])
     print(array_coords.shape)
 
     iCoorU = array_coords[:, 0].flatten()
@@ -166,23 +166,46 @@ def porovnava():
     # posodobi platno/sliko
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+    iImage = Calibimage
+    print(iImage.dtype)
 
 def Enhance_linear():
-    # iImage = cv.cvtColor(Calibimage, cv.COLOR_RGB2GRAY)
-    # maska = enhanceLinear(iImage, 6, 10)
-    # slika = iImage
-    # slika[:, :, 0] = np.where(maska > 0, 255, slika[:, :, 0])
+    global iImage
+    global iImage_red
+    iImage = np.asanyarray(iImage).astype(np.uint8)
+    gray = cv.cvtColor(iImage, cv.COLOR_BGR2GRAY)
 
-    imgG = cv.cvtColor(iImage, cv.COLOR_RGB2GRAY)
-    imgGam = gammaImage(imgG, 3)
+    kernel_size = 5
+    blur_gray = cv.GaussianBlur(gray, (kernel_size, kernel_size), 0)
+    low_threshold = 50
+    high_threshold = 150
+    edges = cv.Canny(blur_gray, low_threshold, high_threshold)
 
-    harris = cv.cornerHarris(imgGam, 30, 5, k=0.05)
-    harris = np.uint8((harris * 255) * 150)
+    rho = 1  # distance resolution in pixels of the Hough grid
+    theta = np.pi / 180  # angular resolution in radians of the Hough grid
+    threshold = 15  # minimum number of votes (intersections in Hough grid cell)
+    min_line_length = 50  # minimum number of pixels making up a line
+    max_line_gap = 20  # maximum gap in pixels between connectable line segments
+    line_image = np.copy(iImage) * 0  # creating a blank to draw lines on
+
+    # Run Hough on edge detected image
+    # Output "lines" is an array containing endpoints of detected line segments
+    lines = cv.HoughLinesP(edges, rho, theta, threshold, np.array([]),
+                            min_line_length, max_line_gap)
+
+    for line in lines:
+        for x1, y1, x2, y2 in line:
+            cv.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
+
+    lines_edges = cv.addWeighted(iImage, 0.8, line_image, 1, 0)
+    # print(lines_edges)
+    iImage_red = lines_edges
+
 
     ##pocistimo prejsno sliko ki je pikazana
     plt.clf()
     # kaj želimo pokazati na platnu
-    plt.imshow(harris)
+    plt.imshow(lines_edges)
 
     # posodobi platno/sliko
     canvas.draw()
@@ -213,30 +236,69 @@ def rotation(i):
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
 
-def Izracun():
-    i = 0
+def izracun_st_cebel():
     global iImage
-    r = iImage[:, :, 0]
-    g = iImage[:, :, 1]
-    b = iImage[:, :, 2]
+    global st_cebel
 
-    spodnja_meja = 50
-    zgornja_meja = 150
+    ##stevilo rdecih pixlov
+    r = ((255 <= iImage_red[:, :, 0])).sum()
+    print("rdece", r)
 
-    i = ((spodnja_meja < iImage[:, :, 0]) & (iImage[:, :, 0] < zgornja_meja) &
-         (spodnja_meja < iImage[:, :, 1]) & (iImage[:, :, 1] < zgornja_meja) &
-         (spodnja_meja < iImage[:, :, 2]) & (iImage[:, :, 2] < zgornja_meja)).sum()
-
-
-    # for i in range(len(r)):
-    #     if r < 120 & r > 80 & g < 120 & g > 80 & b < 120 & b > 80:
-    #         i = i + 1
-
+    ##stevilo vseh pixlov
     st_pixlu = (iImage.size)/3
     print(st_pixlu)
-    print(i)
-    razmerje = (i/st_pixlu)*100
+    razmerje = (r/st_pixlu)*100
     print("razmerje:", razmerje)
+
+    st_cebel = r / povrsina_cebele
+
+
+def oznaci_cebela():
+    global cebela
+    cebela = []
+
+    global cid
+    cid = fig.canvas.mpl_connect('button_press_event', onclick2)
+
+def onclick2(event):
+    ix2, iy2 = event.xdata, event.ydata
+    print(ix2, iy2)
+
+    global cebela
+    cebela.append((ix2, iy2))
+
+    # kaj želimo pokazati na platnu
+    plt.imshow(iImage)
+    plt.plot(ix2, iy2, 'or', markersize=2.0)
+
+    # posodobi platno/sliko
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+
+    global cid
+    if len(cebela) == 4:
+        fig.canvas.mpl_disconnect(cid)
+    return cebela
+
+def izracun_povrsine_cebela():
+    global povrsina_cebele
+    # print('cebela:', cebela)
+    cebela2 = np.array(cebela, dtype=int)
+    # print('cebela 2', cebela2)
+    cebela2 = cebela2.transpose()
+    # print('Cebela 2 transpose',cebela2)
+
+    razdalja_X_2_3 = abs(cebela2[0,2] - cebela2[0,3])
+    razdalja_Y_2_3 = abs(cebela2[1, 2] - cebela2[1, 3])
+    razdalja_tock_2_3 = (np.sqrt(razdalja_X_2_3 ** 2 + razdalja_Y_2_3 ** 2))
+
+    razdalja_X_1_2 = abs(cebela2[0, 0] - cebela2[0, 1])
+    razdalja_Y_1_2 = abs(cebela2[1, 0] - cebela2[1, 1])
+    razdalja_tock_1_2 = (np.sqrt(razdalja_X_1_2 ** 2 + razdalja_Y_1_2 ** 2))
+
+    povrsina_cebele = razdalja_tock_1_2 * razdalja_tock_2_3
+    print('Povrsina cebele:',povrsina_cebele)
+    # return povrsina_cebele
 
 def _quit():
     global MainWin
@@ -276,51 +338,58 @@ class CebeleGUI:
         canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
         x_smer_gumbi = 120
-        razmak = 65
+        razmak = 60
 
         #### BUTTONS ####
         ## 1
         self.ime_datoteke_button = Button(sidemenu, text='Izberi sliko', command=self.open_image, width=20, height=3)
-        self.ime_datoteke_button.place(x=x_smer_gumbi, y=razmak)
+        self.ime_datoteke_button.place(x=x_smer_gumbi, y=razmak*0.1)
 
         ## 2
-        self.ime_st_rotacij = Label(sidemenu, text="Vnesi stopinje rotacije").place(x=x_smer_gumbi, y=razmak*2)
+        self.ime_st_rotacij = Label(sidemenu, text="Vnesi stopinje rotacije").place(x=x_smer_gumbi, y=razmak*1)
 
         ## 3
         self.vnos_st_rotacij = Entry(sidemenu)
-        self.vnos_st_rotacij.place(x=x_smer_gumbi, y=razmak*2.5)
+        self.vnos_st_rotacij.place(x=x_smer_gumbi, y=razmak*1.5)
 
         ## 4
         self.button_rotate_img = Button(sidemenu, text="Zarotiraj sliko", command=self.rotate, width=20, height=3)
-        self.button_rotate_img.place(x=x_smer_gumbi, y=razmak*3)
+        self.button_rotate_img.place(x=x_smer_gumbi, y=razmak*2)
 
         ## 5
         self.button_oznake3x3 = Button(sidemenu, text='Oznaci tocke', command=self.potrdi_oznake3x3, width=20, height=3)
-        self.button_oznake3x3.place(x=x_smer_gumbi, y=razmak*4)
+        self.button_oznake3x3.place(x=x_smer_gumbi, y=razmak*3)
 
         ## 6
         self.button_izpis_tock = Button(sidemenu, text='Izpisi tocke', command=self.potrdi_izpis_tock, width=20, height=3)
-        self.button_izpis_tock.place(x=x_smer_gumbi, y=razmak*5)
+        self.button_izpis_tock.place(x=x_smer_gumbi, y=razmak*4)
 
         ## 7
         self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
-        self.button_porovnava.place(x=x_smer_gumbi, y=razmak*6)
+        self.button_porovnava.place(x=x_smer_gumbi, y=razmak*5)
 
         ## 8
         self.button_maska = Button(sidemenu, text="pokazi masko", command=self.potrdi_maska, width=20, height=3)
-        self.button_maska.place(x=x_smer_gumbi, y=razmak*7)
+        self.button_maska.place(x=x_smer_gumbi, y=razmak*6)
 
         ## 9
         self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
-        self.button_save_img.place(x=x_smer_gumbi, y=razmak*8)
+        self.button_save_img.place(x=x_smer_gumbi, y=razmak*7)
 
         ## 10
-        self.button_izracun = Button(sidemenu, text="Izracun", command=self.potrdi_izracun, width=20, height=3)
-        self.button_izracun.place(x=x_smer_gumbi, y=razmak * 9)
+        self.button_izracun_st_cebela = Button(sidemenu, text="Izracun stevila cebel", command=self.potrdi_izracun_st_cebela, width=20, height=3)
+        self.button_izracun_st_cebela.place(x=x_smer_gumbi, y=razmak * 8)
+
+        ## 11
+        self.button_oznaci_cebela = Button(sidemenu, text="Oznaci cebelo", command=self.potrdi_oznaci_cebela, width=20, height=3)
+        self.button_oznaci_cebela.place(x=x_smer_gumbi, y=razmak * 9)
+
+        self.button_izracun_povrsine_cebela = Button(sidemenu, text="Izracuni velikost cebele", command=self.potrdi_izracun_povrsine_cebela, width=20, height=3)
+        self.button_izracun_povrsine_cebela.place(x=x_smer_gumbi, y=razmak * 10)
 
         ## END
         self.izpis = Text(sidemenu, width=50, height=15)
-        self.izpis.place(x=x_smer_gumbi/5, y=razmak * 10)
+        self.izpis.place(x=x_smer_gumbi/5, y=razmak * 11)
 
         ## QUIT
         self.button_quit = Button(master=mainarea, text="Quit", command=self.potrdi_quit)
@@ -369,9 +438,26 @@ class CebeleGUI:
         self.izpis.insert(END, st_rotacij)
         self.izpis.insert(END, ' stopinj\n')
 
-    def potrdi_izracun(self):
-        Izracun()
-        self.izpis.insert(END, 'Izvedli  izracun: ')
+    def potrdi_izracun_st_cebela(self):
+        izracun_st_cebel()
+        self.izpis.insert(END, 'Na sliki je:')
+        self.izpis.insert(END, st_cebel)
+        self.izpis.insert(END, 'cebel:\n')
+
+    def potrdi_oznaci_cebela(self):
+        oznaci_cebela()
+        self.izpis.insert(END, 'Oznacite tocke po vrstnm redu:\n')
+        self.izpis.insert(END, '#1  #2\n')
+        self.izpis.insert(END, '\n')
+        self.izpis.insert(END, '\n')
+        self.izpis.insert(END, '#4  #3\n')
+
+    def potrdi_izracun_povrsine_cebela(self):
+        izracun_povrsine_cebela()
+        self.izpis.insert(END, 'Velikost cebele je:\n')
+        self.izpis.insert(END, povrsina_cebele)
+        self.izpis.insert(END, 'pixlov:\n')
+
 
     def potrdi_quit(self):
         _quit()
