@@ -476,3 +476,4 @@ class CebeleGUI:
 okno = Tk()
 my_gui = CebeleGUI(okno)
 okno.mainloop()
+##test
