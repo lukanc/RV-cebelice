@@ -247,10 +247,12 @@ def izracun_st_cebel():
     ##stevilo vseh pixlov
     st_pixlu = (iImage.size)/3
     print(st_pixlu)
-    razmerje = (r/st_pixlu)*100
+    razmerje = (r/st_pixlu)
     print("razmerje:", razmerje)
-
-    st_cebel = r / povrsina_cebele
+    povrsina_cebele = 3500
+    print(1.4-razmerje)
+    st_cebel = ((r / povrsina_cebele) - (950 * (1.25 - razmerje)))*1
+    print('stevilo cebel:', st_cebel)
 
 
 def oznaci_cebela():
@@ -275,6 +277,7 @@ def onclick2(event):
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
+    # print('stevilo cebel', len(cebela))
     global cid
     if len(cebela) == 4:
         fig.canvas.mpl_disconnect(cid)
@@ -360,32 +363,35 @@ class CebeleGUI:
         self.button_oznake3x3 = Button(sidemenu, text='Oznaci tocke', command=self.potrdi_oznake3x3, width=20, height=3)
         self.button_oznake3x3.place(x=x_smer_gumbi, y=razmak*3)
 
-        ## 6
-        self.button_izpis_tock = Button(sidemenu, text='Izpisi tocke', command=self.potrdi_izpis_tock, width=20, height=3)
-        self.button_izpis_tock.place(x=x_smer_gumbi, y=razmak*4)
+        # ## 6
+        # self.button_izpis_tock = Button(sidemenu, text='Izpisi tocke', command=self.potrdi_izpis_tock, width=20, height=3)
+        # self.button_izpis_tock.place(x=x_smer_gumbi, y=razmak*4)
 
         ## 7
         self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
-        self.button_porovnava.place(x=x_smer_gumbi, y=razmak*5)
+        self.button_porovnava.place(x=x_smer_gumbi, y=razmak*4)
 
         ## 8
-        self.button_maska = Button(sidemenu, text="pokazi masko", command=self.potrdi_maska, width=20, height=3)
-        self.button_maska.place(x=x_smer_gumbi, y=razmak*6)
+        self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
+        self.button_save_img.place(x=x_smer_gumbi, y=razmak * 5)
 
         ## 9
-        self.button_save_img = Button(sidemenu, text="Shrani sliko", command=self.save_img, width=20, height=3)
-        self.button_save_img.place(x=x_smer_gumbi, y=razmak*7)
+        self.button_maska = Button(sidemenu, text="Pokazi masko", command=self.potrdi_maska, width=20, height=3)
+        self.button_maska.place(x=x_smer_gumbi, y=razmak*6)
 
         ## 10
-        self.button_izracun_st_cebela = Button(sidemenu, text="Izracun stevila cebel", command=self.potrdi_izracun_st_cebela, width=20, height=3)
-        self.button_izracun_st_cebela.place(x=x_smer_gumbi, y=razmak * 8)
+        self.button_oznaci_cebela = Button(sidemenu, text="Oznaci cebelo", command=self.potrdi_oznaci_cebela, width=20, height=3)
+        self.button_oznaci_cebela.place(x=x_smer_gumbi, y=razmak * 7)
 
         ## 11
-        self.button_oznaci_cebela = Button(sidemenu, text="Oznaci cebelo", command=self.potrdi_oznaci_cebela, width=20, height=3)
-        self.button_oznaci_cebela.place(x=x_smer_gumbi, y=razmak * 9)
+        self.button_izracun_povrsine_cebela = Button(sidemenu, text="Izracuni velikost cebele",
+                                                     command=self.potrdi_izracun_povrsine_cebela, width=20, height=3)
+        self.button_izracun_povrsine_cebela.place(x=x_smer_gumbi, y=razmak * 8)
 
-        self.button_izracun_povrsine_cebela = Button(sidemenu, text="Izracuni velikost cebele", command=self.potrdi_izracun_povrsine_cebela, width=20, height=3)
-        self.button_izracun_povrsine_cebela.place(x=x_smer_gumbi, y=razmak * 10)
+        ## 12
+        self.button_izracun_st_cebela = Button(sidemenu, text="Izracun stevila cebel",
+                                               command=self.potrdi_izracun_st_cebela, width=20, height=3)
+        self.button_izracun_st_cebela.place(x=x_smer_gumbi, y=razmak * 9)
 
         ## END
         self.izpis = Text(sidemenu, width=50, height=15)
@@ -417,13 +423,17 @@ class CebeleGUI:
         self.izpis.insert(END, '\n')
         self.izpis.insert(END, '#7 #6 #5\n')
 
-    def potrdi_izpis_tock(self):
+    # def potrdi_izpis_tock(self):
+    #     izpis_tock()
+    #     self.izpis.insert(END, 'Izbrali ste tocke:\n')
+    #     self.izpis.insert(END, array_coords)
+    #     self.izpis.insert(END, '\n')
+
+    def potrdi_porovnava(self):
         izpis_tock()
         self.izpis.insert(END, 'Izbrali ste tocke:\n')
         self.izpis.insert(END, array_coords)
         self.izpis.insert(END, '\n')
-
-    def potrdi_porovnava(self):
         porovnava()
         self.izpis.insert(END, 'Izvedli ste porovnavo\n')
 
@@ -461,9 +471,6 @@ class CebeleGUI:
 
     def potrdi_quit(self):
         _quit()
-
-
-
 
 
 okno = Tk()
