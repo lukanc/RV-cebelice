@@ -16,7 +16,7 @@ pacient_no = 0
 # poišči vse podmape
 patient_paths = os.listdir(DATA_PATH)
 print('V mapi {:s} je {:d} podmap.'.format(DATA_PATH, len(patient_paths)))
-
+##
 # naloži podatke iz ene mape
 patient_path = join(DATA_PATH, patient_paths[pacient_no])
 # t1 = itk.ReadImage(join(patient_path, 'slika.png'))
