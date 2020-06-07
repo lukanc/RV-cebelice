@@ -48,22 +48,22 @@ def img2array(img):
 
 
 # prikaži podatke
-f, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, sharex=True, sharey=True, figsize=(20, 5))
+f, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(20, 5))
 ax1.imshow(img2array(t1), cmap='gray')
-ax1.set_title('T1 slika')
+ax1.set_title('Png slika')
 ax1.axis('off')
 
 ax2.imshow(img2array(bmsk), cmap='gray')
-ax2.set_title('FLAIR slika')
+ax2.set_title('Maska slike')
 ax2.axis('off')
 
-ax3.imshow(t2, cmap='gray')
-ax3.set_title('FLAIR slika')
-ax3.axis('off')
-
-
-ax4.imshow(t3, cmap='gray')
-ax4.set_title('bmsk2 slika')
-ax4.axis('off')
+# ax3.imshow(t2, cmap='gray')
+# ax3.set_title('Maska slike')
+# ax3.axis('off')
+#
+#
+# ax4.imshow(t3, cmap='gray')
+# ax4.set_title('bmsk2 slika')
+# ax4.axis('off')
 
 plt.show()
