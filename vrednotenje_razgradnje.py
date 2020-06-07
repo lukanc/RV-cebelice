@@ -1,8 +1,5 @@
 import os
-import sys
 import random
-import warnings
-
 import numpy as np
 import SimpleITK as itk
 import matplotlib.pyplot as plt
@@ -10,18 +7,9 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 from keras.models import Model, load_model
-from keras.layers import Input
-from keras.layers.core import Dropout, Lambda
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
-from keras.layers.pooling import MaxPooling2D
-from keras.layers.merge import concatenate
-from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras import backend as K
-
 import tensorflow as tf
 
-from os.path import join
-# from amslib import load_mri_brain_data
 
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 for physical_device in physical_devices:
@@ -112,11 +100,12 @@ for pacient_no in tqdm(range(len(patient_paths))):
         bmsk5 = np.squeeze(itk.GetArrayFromImage(bmsk))
 
         for i in range(10):
-            slike_sub_array[i] = np.array(t5[i * 384:(i + 1) * 384, i * 226:(i + 1) * 226])
-            maske_sub_array[i] = np.array(bmsk5[i * 384:(i + 1) * 384, i * 226:(i + 1) * 226])
-            cebele_data.append([(slike_sub_array[i]), (maske_sub_array[i])])
-            cebele_data_slike.append((slike_sub_array[i]))
-            cebele_data_maske.append((maske_sub_array[i]))
+            for j in range(10):
+                slike_sub_array[i] = np.array(t5[i * 384:(i + 1) * 384, j * 226:(j + 1) * 226])
+                maske_sub_array[i] = np.array(bmsk5[i * 384:(i + 1) * 384, j * 226:(j + 1) * 226])
+                cebele_data.append([(slike_sub_array[i]), (maske_sub_array[i])])
+                cebele_data_slike.append((slike_sub_array[i]))
+                cebele_data_maske.append((maske_sub_array[i]))
 
 X_train, X_test, y_train, y_test = train_test_split(cebele_data_slike, cebele_data_maske , test_size=TEST_DATA_FRACTION)
 
@@ -124,8 +113,8 @@ X_train = np.asarray(X_train)
 X_test = np.asarray(X_test)
 y_train = np.asarray(y_train)
 y_test = np.asarray(y_test)
-y_train = y_train.reshape((80, 384, 226, -1))
-y_test = y_test.reshape((20, 384, 226, -1))
+y_train = y_train.reshape((800, 384, 226, -1))
+y_test = y_test.reshape((200, 384, 226, -1))
 
 ## PADING
 y_train = np.pad(y_train, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
@@ -154,48 +143,48 @@ preds_train = model.predict(X_train[:int(X_train.shape[0]*0.9)], verbose=1)
 preds_test = model.predict(X_test, verbose=1)
 
 # dobljene vrednosti
-preds_train_t = (preds_train > 0.3).astype(np.uint8)
-preds_test_t = (preds_test > 0.3).astype(np.uint8)
+preds_train_t = (preds_train > 0.5).astype(np.uint8)
+preds_test_t = (preds_test > 0.5).astype(np.uint8)
 
 # preveri kakovost razgradnje na učnih vzorcih (sanity check)
 ix = random.randint(0, len(preds_train_t))
 _, _, num_modalities = X_train[ix].shape
 
-titles = [m.upper() + ' slika' for m in MODALITIES] + ['Referenčna razgradnja', 'Razgradnja U-net']
-f, ax = plt.subplots(1, num_modalities+2, sharex=True, sharey=True, figsize=(20, 5))
-for i in range(num_modalities):
-    ax[i].imshow(X_train[ix][:,:,i], cmap='gray')
-    ax[i].set_title(titles[i])
-    ax[i].axis('off')
-# prikaži referenčno razgradnjo
-ax[-2].imshow(np.squeeze(y_train[ix]))
-ax[-2].set_title(titles[-2])
-ax[-2].axis('off')
-# prikaži razgradnjo z U-net
-ax[-1].imshow(np.squeeze(preds_train_t[ix]))
-ax[-1].set_title(titles[-1])
-ax[-1].axis('off')
+# titles = [m.upper() + ' slika' for m in MODALITIES] + ['Referenčna razgradnja', 'Razgradnja U-net']
+# f, ax = plt.subplots(1, num_modalities+2, sharex=True, sharey=True, figsize=(20, 5))
+# for i in range(num_modalities):
+#     ax[i].imshow(X_train[ix][:,:,i], cmap='gray')
+#     ax[i].set_title(titles[i])
+#     ax[i].axis('off')
+# # prikaži referenčno razgradnjo
+# ax[-2].imshow(np.squeeze(y_train[ix]))
+# ax[-2].set_title(titles[-2])
+# ax[-2].axis('off')
+# # prikaži razgradnjo z U-net
+# ax[-1].imshow(np.squeeze(preds_train_t[ix]))
+# ax[-1].set_title(titles[-1])
+# ax[-1].axis('off')
 
-plt.show()
+# plt.show()
 
 # preveri kakovost razgradnje na naključno izbranih testnih vzorcih
 ix = random.randint(0, len(preds_test_t))
 _, _, num_modalities = X_test[ix].shape
 
 titles = [m.upper() + ' slika' for m in MODALITIES] + ['Referenčna razgradnja', 'Razgradnja U-net']
-f, ax = plt.subplots(1, num_modalities+2, sharex=True, sharey=True, figsize=(20, 5))
-for i in range(num_modalities):
-    ax[i].imshow(X_test[ix][:,:,i], cmap='gray')
-    ax[i].set_title(titles[i])
-    ax[i].axis('off')
+f, ax = plt.subplots(1, 3, sharex=True, sharey=True, figsize=(20, 5))
+
+ax[0].imshow(X_test[ix][:,:,:], cmap='gray')
+ax[0].set_title('Original slika')
+ax[0].axis('off')
 # prikaži referenčno razgradnjo
-ax[-2].imshow(np.squeeze(y_test[ix]))
-ax[-2].set_title(titles[-2])
-ax[-2].axis('off')
+ax[1].imshow(np.squeeze(y_test[ix]))
+ax[1].set_title(titles[-2])
+ax[1].axis('off')
 # prikaži razgradnjo z U-net
-ax[-1].imshow(np.squeeze(preds_test_t[ix]))
-ax[-1].set_title(titles[-1])
-ax[-1].axis('off')
+ax[2].imshow(np.squeeze(preds_test_t[ix]))
+ax[2].set_title(titles[-1])
+ax[2].axis('off')
 
 plt.show()
 
