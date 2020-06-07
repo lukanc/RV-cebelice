@@ -77,6 +77,7 @@ X_train = np.asarray(X_train)
 X_test = np.asarray(X_test)
 y_train = np.asarray(y_train)
 y_test = np.asarray(y_test)
+print('Velikost Y PREJ: {}'.format(y_train.shape))
 y_train = y_train.reshape((67, 384, 226, -1))
 y_test = y_test.reshape((33, 384, 226, -1))
 
@@ -194,6 +195,7 @@ plt.show()
 
 print('seg img',seg_img.shape)
 print(seg_img)
+print('Število pixlov v maski: {}'.format(np.count_nonzero(seg_img)))
 
 p = model.predict(X_test)
 num_voxels = np.sum(
