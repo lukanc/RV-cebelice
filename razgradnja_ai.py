@@ -35,7 +35,7 @@ np.random.seed = seed
 ### Konstante in parametri
 
 # nastavi željeno velikost slik
-IMG_WIDTH = 226
+IMG_WIDTH = 256
 IMG_HEIGHT = 384
 MODALITIES = ('t1', 'flair') # 't1' and/or 'flair'
 IMG_CHANNELS = len(MODALITIES)
@@ -90,6 +90,14 @@ y_test = np.asarray(y_test)
 y_train = y_train.reshape((80, 384, 226, -1))
 y_test = y_test.reshape((20, 384, 226, -1))
 
+## PADING
+y_train = np.pad(y_train, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
+y_test = np.pad(y_test, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
+
+X_train = np.pad(X_train, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
+X_test = np.pad(X_test, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
+
+
 print('Velikost 4D polja za učenje: {}'.format(X_train.shape))
 print('Velikost 4D polja za testiranje: {}'.format(X_test.shape))
 
@@ -114,12 +122,12 @@ for i in range(num_modalities):
 ax[-1].imshow(np.squeeze(y_train[ix]))
 ax[-1].set_title(titles[-1])
 
-plt.show()
+# plt.show()
 
 ### 3.2 Načrtovanje in učenje U-net modela
 
 # vhodna plast
-inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+inputs = Input((IMG_HEIGHT, IMG_WIDTH, 3))
 print(inputs)
 
 ### BEGIN SOLUTION
@@ -193,3 +201,60 @@ model = Model(inputs=[inputs], outputs=[outputs])
 
 # povzetek modela
 model.summary()
+
+
+### Definicija kriterijskih funkcij
+def mean_iou(y_true, y_pred):
+    prec = []
+    for t in np.arange(0.5, 1.0, 0.05):
+        y_pred_ = tf.to_int32(y_pred > t)
+        score, up_opt = tf.metrics.mean_iou(y_true, y_pred_, 2)
+        K.get_session().run(tf.local_variables_initializer())
+        with tf.control_dependencies([up_opt]):
+            score = tf.identity(score)
+        prec.append(score)
+    return K.mean(K.stack(prec), axis=0)
+
+def iou_coef(y_true, y_pred, smooth=1):
+    """
+    IoU = (|X &amp; Y|)/ (|X or Y|)
+    """
+    intersection = K.sum(K.abs(y_true * y_pred), axis=-1)
+    union = K.sum(y_true,-1) + K.sum(y_pred,-1) - intersection
+    return (intersection + smooth) / ( union + smooth)
+
+def iou_coef_loss(y_true, y_pred):
+    return -iou_coef(y_true, y_pred)
+
+def dice_coef(y_true, y_pred):
+    """
+    DSC = (2*|X &amp; Y|)/ (|X| + |Y|)
+    """
+    smooth = 1
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
+def dice_coef_loss(y_true, y_pred):
+    return 1-dice_coef(y_true, y_pred)
+
+
+### Nastavitve modela za učenje
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=[dice_coef])
+
+### Hiperparametri
+BATCH_SIZE = 16
+NUM_EPOCHS = 50
+
+### Učenje modela
+
+# zaženi učenje modela
+earlystopper = EarlyStopping(patience=5, verbose=1)
+checkpointer = ModelCheckpoint(join('models', 'model-cebele-unet-seg-1.h5'), verbose=1, save_best_only=True)
+results = model.fit(X_train, y_train, validation_split=0.1, batch_size=BATCH_SIZE, epochs=NUM_EPOCHS,
+                    callbacks=[earlystopper, checkpointer])
+
