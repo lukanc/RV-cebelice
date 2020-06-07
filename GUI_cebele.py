@@ -2,20 +2,9 @@
 
 from tkinter import *
 from tkinter import filedialog, messagebox
-from PIL import ImageTk, Image
-import PIL.Image as im
 import os
-import numpy as np
-from matplotlib.figure import Figure
-import matplotlib
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.backend_bases import key_press_handler
-sys.path.append("/Users/tilenkocevar/Documents/FAKS/Robotika/1.letnik/2.semester/Robotski vid/projekt - cebele/")
 from knjiznica import *
-import scipy.misc
-import imageio
-import cv2 as cv
 from PIL import Image, ImageOps
 
 
@@ -40,7 +29,7 @@ def open_img():
     filename = select_file()
     global iImage
     iImage = np.array(im.open(filename))
-    print('tip ob odpiranju', iImage.dtype)
+    # print('tip ob odpiranju', iImage.dtype)
 
     ##pocistimo prejsno sliko ki je pikazana
     plt.clf()
@@ -62,7 +51,7 @@ def oznake3x3():
 def onclick(event):
     global ix, iy
     ix, iy = event.xdata, event.ydata
-    print(ix, iy)
+    # print(ix, iy)
 
     global coords
     coords.append((ix, iy))
@@ -83,8 +72,8 @@ def onclick(event):
 def izpis_tock():
     global array_coords
     array_coords = np.array(coords)
-    print(array_coords.shape)
-    print(array_coords)
+    # print(array_coords.shape)
+    # print(array_coords)
 
     ##pocistimo prejsno sliko ki je pikazana
     plt.clf()
@@ -103,15 +92,7 @@ def porovnava():
     iImage = np.asanyarray(iImage)
     iCalImageG = colorToGray(iImage)
     # koordinate v prostoru slike
-    # array_coords= np.array([[ 710.16264541,  522.88425555],
-    #                 [1406.21730166,  437.40385917],
-    #                  [2419.77057303,  376.34643319],
-    #                  [2334.29017665, 1994.36822183],
-    #                  [2254.91552287, 3862.72545701],
-    #                  [1223.0450237,  3673.44743645],
-    #                  [ 380.45254509, 3502.48664369],
-    #                  [ 557.51908045, 1939.41653844]])
-    print(array_coords.shape)
+    # print(array_coords.shape)
 
     iCoorU = array_coords[:, 0].flatten()
     iCoorV = array_coords[:, 1].flatten()
@@ -151,8 +132,8 @@ def porovnava():
                                    range(iImage.shape[0]),
                                    sparse=False, indexing='xy')
 
-    print("XX:", iCoorXx.shape)
-    print("YY", iCoorYy.shape)
+    # print("XX:", iCoorXx.shape)
+    # print("YY", iCoorYy.shape)
     global Calibimage
     Calibimage = geomCalibImageRGB(iParOpt, iImage, iCoorXx, iCoorYy, 1)
     # global canvas
@@ -167,7 +148,7 @@ def porovnava():
     canvas.draw()
     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
     iImage = Calibimage
-    print(iImage.dtype)
+    # print(iImage.dtype)
 
 def razgradnja_slike_ai():
     global iImage
@@ -179,7 +160,7 @@ def razgradnja_slike_ai():
     pokritost_cebel = np.count_nonzero(preds_test_t)  ##poda st pixlov ki jih pokrivajo cebele
     st_pixlu = (iImage.size) / 3
     pokritost_cebel_procent = pokritost_cebel/st_pixlu
-    print('stevilo pixlov Unet', np.count_nonzero(preds_test_t))
+    # print('stevilo pixlov Unet', np.count_nonzero(preds_test_t))
 
 def savefile():
     filename_save = filedialog.asksaveasfilename(defaultextension=".png")
@@ -212,63 +193,14 @@ def izracun_st_cebel():
 
     ##stevilo vseh pixlov
     st_pixlu = (iImage.size)/3
-    print(st_pixlu)
+    # print(st_pixlu)
     povrsina_cebele = 9500
-    print(povrsina_cebele)
+    # print(povrsina_cebele)
 
     st_cebel = pokritost_cebel/povrsina_cebele
 
-    # st_cebel = ((r / povrsina_cebele) - (950 * (1.25 - razmerje)))*1
     print('stevilo cebel:', st_cebel)
 
-
-# def oznaci_cebela():
-#     global cebela
-#     cebela = []
-#
-#     global cid
-#     cid = fig.canvas.mpl_connect('button_press_event', onclick2)
-#
-# def onclick2(event):
-#     ix2, iy2 = event.xdata, event.ydata
-#     print(ix2, iy2)
-#
-#     global cebela
-#     cebela.append((ix2, iy2))
-#
-#     # kaj želimo pokazati na platnu
-#     plt.imshow(iImage)
-#     plt.plot(ix2, iy2, 'or', markersize=2.0)
-#
-#     # posodobi platno/sliko
-#     canvas.draw()
-#     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-#
-#     # print('stevilo cebel', len(cebela))
-#     global cid
-#     if len(cebela) == 4:
-#         fig.canvas.mpl_disconnect(cid)
-#     return cebela
-#
-# def izracun_povrsine_cebela():
-#     global povrsina_cebele
-#     # print('cebela:', cebela)
-#     cebela2 = np.array(cebela, dtype=int)
-#     # print('cebela 2', cebela2)
-#     cebela2 = cebela2.transpose()
-#     # print('Cebela 2 transpose',cebela2)
-#
-#     razdalja_X_2_3 = abs(cebela2[0,2] - cebela2[0,3])
-#     razdalja_Y_2_3 = abs(cebela2[1, 2] - cebela2[1, 3])
-#     razdalja_tock_2_3 = (np.sqrt(razdalja_X_2_3 ** 2 + razdalja_Y_2_3 ** 2))
-#
-#     razdalja_X_1_2 = abs(cebela2[0, 0] - cebela2[0, 1])
-#     razdalja_Y_1_2 = abs(cebela2[1, 0] - cebela2[1, 1])
-#     razdalja_tock_1_2 = (np.sqrt(razdalja_X_1_2 ** 2 + razdalja_Y_1_2 ** 2))
-#
-#     povrsina_cebele = razdalja_tock_1_2 * razdalja_tock_2_3
-#     print('Povrsina cebele:',povrsina_cebele)
-#     # return povrsina_cebele
 
 def _quit():
     global MainWin
@@ -330,10 +262,6 @@ class CebeleGUI:
         self.button_oznake3x3 = Button(sidemenu, text='Oznaci tocke', command=self.potrdi_oznake3x3, width=20, height=3)
         self.button_oznake3x3.place(x=x_smer_gumbi, y=razmak*3)
 
-        # ## 6
-        # self.button_izpis_tock = Button(sidemenu, text='Izpisi tocke', command=self.potrdi_izpis_tock, width=20, height=3)
-        # self.button_izpis_tock.place(x=x_smer_gumbi, y=razmak*4)
-
         ## 7
         self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
         self.button_porovnava.place(x=x_smer_gumbi, y=razmak*4)
@@ -346,23 +274,9 @@ class CebeleGUI:
         self.button_maska = Button(sidemenu, text="Izracuni st cebel", command=self.potrdi_maska, width=20, height=3)
         self.button_maska.place(x=x_smer_gumbi, y=razmak*6)
 
-        # ## 10
-        # self.button_oznaci_cebela = Button(sidemenu, text="Oznaci cebelo", command=self.potrdi_oznaci_cebela, width=20, height=3)
-        # self.button_oznaci_cebela.place(x=x_smer_gumbi, y=razmak * 7)
-        #
-        # ## 11
-        # self.button_izracun_povrsine_cebela = Button(sidemenu, text="Izracuni velikost cebele",
-        #                                              command=self.potrdi_izracun_povrsine_cebela, width=20, height=3)
-        # self.button_izracun_povrsine_cebela.place(x=x_smer_gumbi, y=razmak * 8)
-        #
-        # ## 12
-        # self.button_izracun_st_cebela = Button(sidemenu, text="Izracun stevila cebel",
-        #                                        command=self.potrdi_izracun_st_cebela, width=20, height=3)
-        # self.button_izracun_st_cebela.place(x=x_smer_gumbi, y=razmak * 9)
-
         ## END
-        self.izpis = Text(sidemenu, width=50, height=15)
-        self.izpis.place(x=x_smer_gumbi/5, y=razmak * 11)
+        self.izpis = Text(sidemenu, width=50, height=30)
+        self.izpis.place(x=x_smer_gumbi/5, y=razmak * 8)
 
         ## QUIT
         self.button_quit = Button(master=mainarea, text="Quit", command=self.potrdi_quit)
@@ -390,12 +304,6 @@ class CebeleGUI:
         self.izpis.insert(END, '\n')
         self.izpis.insert(END, '#7 #6 #5\n')
 
-    # def potrdi_izpis_tock(self):
-    #     izpis_tock()
-    #     self.izpis.insert(END, 'Izbrali ste tocke:\n')
-    #     self.izpis.insert(END, array_coords)
-    #     self.izpis.insert(END, '\n')
-
     def potrdi_porovnava(self):
         izpis_tock()
         self.izpis.insert(END, 'Izbrali ste tocke:\n')
@@ -409,7 +317,7 @@ class CebeleGUI:
         self.izpis.insert(END, 'Izvedli ste razgradnjo slike: \n')
         self.izpis.insert(END, 'Cebele pokrivajo:')
         self.izpis.insert(END, pokritost_cebel_procent)
-        self.izpis.insert(END, ' stopinj\n')
+        self.izpis.insert(END, ' %\n')
         izracun_st_cebel()
         self.izpis.insert(END, 'Na sliki je:')
         self.izpis.insert(END, st_cebel)
@@ -423,27 +331,6 @@ class CebeleGUI:
         self.izpis.insert(END, st_rotacij)
         self.izpis.insert(END, ' stopinj\n')
 
-    # def potrdi_izracun_st_cebela(self):
-    #     izracun_st_cebel()
-    #     self.izpis.insert(END, 'Na sliki je:')
-    #     self.izpis.insert(END, st_cebel)
-    #     self.izpis.insert(END, 'cebel:\n')
-
-    # def potrdi_oznaci_cebela(self):
-    #     oznaci_cebela()
-    #     self.izpis.insert(END, 'Oznacite tocke po vrstnm redu:\n')
-    #     self.izpis.insert(END, '#1  #2\n')
-    #     self.izpis.insert(END, '\n')
-    #     self.izpis.insert(END, '\n')
-    #     self.izpis.insert(END, '#4  #3\n')
-    #
-    # def potrdi_izracun_povrsine_cebela(self):
-    #     izracun_povrsine_cebela()
-    #     self.izpis.insert(END, 'Velikost cebele je:\n')
-    #     self.izpis.insert(END, povrsina_cebele)
-    #     self.izpis.insert(END, 'pixlov:\n')
-
-
     def potrdi_quit(self):
         _quit()
 
@@ -451,4 +338,3 @@ class CebeleGUI:
 okno = Tk()
 my_gui = CebeleGUI(okno)
 okno.mainloop()
-##test
