@@ -75,11 +75,12 @@ for pacient_no in tqdm(range(len(patient_paths))):
         bmsk5 = np.squeeze(itk.GetArrayFromImage(bmsk))
 
         for i in range(10):
-            slike_sub_array[i] = np.array(t5[i * 384:(i + 1) * 384, i * 226:(i + 1) * 226])
-            maske_sub_array[i] = np.array(bmsk5[i * 384:(i + 1) * 384, i * 226:(i + 1) * 226])
-            cebele_data.append([(slike_sub_array[i]), (maske_sub_array[i])])
-            cebele_data_slike.append((slike_sub_array[i]))
-            cebele_data_maske.append((maske_sub_array[i]))
+            for j in range(10):
+                slike_sub_array[i] = np.array(t5[i * 384:(i + 1) * 384, j * 226:(j + 1) * 226])
+                maske_sub_array[i] = np.array(bmsk5[i * 384:(i + 1) * 384, j * 226:(j + 1) * 226])
+                cebele_data.append([(slike_sub_array[i]), (maske_sub_array[i])])
+                cebele_data_slike.append((slike_sub_array[i]))
+                cebele_data_maske.append((maske_sub_array[i]))
 
 X_train, X_test, y_train, y_test = train_test_split(cebele_data_slike, cebele_data_maske , test_size=TEST_DATA_FRACTION)
 
@@ -87,8 +88,8 @@ X_train = np.asarray(X_train)
 X_test = np.asarray(X_test)
 y_train = np.asarray(y_train)
 y_test = np.asarray(y_test)
-y_train = y_train.reshape((80, 384, 226, -1))
-y_test = y_test.reshape((20, 384, 226, -1))
+y_train = y_train.reshape((800, 384, 226, -1))
+y_test = y_test.reshape((200, 384, 226, -1))
 
 ## PADING
 y_train = np.pad(y_train, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
