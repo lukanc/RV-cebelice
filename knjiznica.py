@@ -671,13 +671,8 @@ def enhanceLinear(iImage, iSigma, iBeta):
 
 def razgradnja(iImage):
 
-    import os
     import random
     import numpy as np
-    import SimpleITK as itk
-    import matplotlib.pyplot as plt
-    from tqdm import tqdm
-    from sklearn.model_selection import train_test_split
 
     from keras.models import Model, load_model
     from keras import backend as K
@@ -732,54 +727,13 @@ def razgradnja(iImage):
 
     ### Konstante in parametri
 
-    # nastavi željeno velikost slik
-    IMG_WIDTH = 256
-    IMG_HEIGHT = 384
-    MODALITIES = ('t1', 'flair') # 't1' and/or 'flair'
-    IMG_CHANNELS = len(MODALITIES)
-    # določi oznake
-    CSF, GM, WM, LESIONS = 1, 2, 3, 10
-    # določi delež testnih podatkov
-    TEST_DATA_FRACTION = 0.2
-
-
     ### 3.1 Naloži MRI podatke in loči med učne in testne
 
     slike_sub_array = dict()
-    maske_sub_array = dict()
-
-    cebele_data = []
     cebele_data_slike = []
-    cebele_data_maske = []
+
 
     from os.path import join
-
-    DATA_PATH = '/Users/tilenkocevar/Documents/FAKS/Robotika/1.letnik/2.semester/Robotski vid/projekt - cebele/maske'
-    pacient_no = 0
-
-    # poišči vse podmape
-    # patient_paths = os.listdir(DATA_PATH)
-    # print('path', patient_paths)
-    #
-    # print('V mapi {:s} je {:d} podmap.'.format(DATA_PATH, len(patient_paths)))
-
-    # for pacient_no in tqdm(range(len(patient_paths))):
-    #     if not patient_paths[pacient_no].startswith('.'):
-    #         patient_path = join(DATA_PATH, patient_paths[pacient_no])
-    #         t1 = itk.ReadImage(join(patient_path, 'slika.png'))
-    #         bmsk = itk.ReadImage(join(patient_path, 'maska.nrrd'))
-    #
-    #         t5 = itk.GetArrayFromImage(t1)
-    #         bmsk5 = np.squeeze(itk.GetArrayFromImage(bmsk))
-    #
-    #         for i in range(10):
-    #             slike_sub_array[i] = np.array(t5[i * 384:(i + 1) * 384, i * 226:(i + 1) * 226])
-    #             maske_sub_array[i] = np.array(bmsk5[i * 384:(i + 1) * 384, i * 226:(i + 1) * 226])
-    #             cebele_data.append([(slike_sub_array[i]), (maske_sub_array[i])])
-    #             cebele_data_slike.append((slike_sub_array[i]))
-    #             cebele_data_maske.append((maske_sub_array[i]))
-    #
-    # X_train, X_test, y_train, y_test = train_test_split(cebele_data_slike, cebele_data_maske , test_size=TEST_DATA_FRACTION)
 
     for i in range(10):
         for j in range(10):
@@ -792,7 +746,7 @@ def razgradnja(iImage):
     X_test = np.pad(X_test, [(0,0),(0,0),(0,30),(0,0)], mode='constant', constant_values=0)
 
 
-    print('Velikost 4D polja za testiranje: {}'.format(X_test.shape))
+    # print('Velikost 4D polja za testiranje: {}'.format(X_test.shape))
 
     ### 3.3 Vrednotenje razgradnje
 
@@ -810,9 +764,9 @@ def razgradnja(iImage):
     preds_test_t = (preds_test > 0.3).astype(np.uint8)
     Rezultati.append(preds_test_t)
     Rezultati = np.asarray(Rezultati)
-    print('Rezultati shape:', Rezultati.shape)
+    # print('Rezultati shape:', Rezultati.shape)
 
-    print('stevilo pixlov Unet', np.count_nonzero(preds_test_t))
+    # print('stevilo pixlov Unet', np.count_nonzero(preds_test_t))
     return(preds_test_t)
 
 ##############################################################################################################################
