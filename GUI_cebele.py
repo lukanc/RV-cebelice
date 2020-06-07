@@ -263,7 +263,7 @@ class CebeleGUI:
         self.button_oznake3x3.place(x=x_smer_gumbi, y=razmak*3)
 
         ## 7
-        self.button_porovnava = Button(sidemenu, text='Izvedi porovnavo', command=self.potrdi_porovnava, width=20, height=3)
+        self.button_porovnava = Button(sidemenu, text='Izvedi poravnavo', command=self.potrdi_porovnava, width=20, height=3)
         self.button_porovnava.place(x=x_smer_gumbi, y=razmak*4)
 
         ## 8
@@ -271,7 +271,7 @@ class CebeleGUI:
         self.button_save_img.place(x=x_smer_gumbi, y=razmak * 5)
 
         ## 9
-        self.button_maska = Button(sidemenu, text="Izracuni st cebel", command=self.potrdi_maska, width=20, height=3)
+        self.button_maska = Button(sidemenu, text="Izracun st cebel", command=self.potrdi_maska, width=20, height=3)
         self.button_maska.place(x=x_smer_gumbi, y=razmak*6)
 
         ## END
