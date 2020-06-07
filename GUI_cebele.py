@@ -169,47 +169,17 @@ def porovnava():
     iImage = Calibimage
     print(iImage.dtype)
 
-def Enhance_linear():
+def razgradnja_slike_ai():
     global iImage
-    global iImage_red
+    global pokritost_cebel
+    global pokritost_cebel_procent
     iImage = np.asanyarray(iImage).astype(np.uint8)
-    gray = cv.cvtColor(iImage, cv.COLOR_BGR2GRAY)
 
-    kernel_size = 5
-    blur_gray = cv.GaussianBlur(gray, (kernel_size, kernel_size), 0)
-    low_threshold = 50
-    high_threshold = 150
-    edges = cv.Canny(blur_gray, low_threshold, high_threshold)
-
-    rho = 1  # distance resolution in pixels of the Hough grid
-    theta = np.pi / 180  # angular resolution in radians of the Hough grid
-    threshold = 15  # minimum number of votes (intersections in Hough grid cell)
-    min_line_length = 50  # minimum number of pixels making up a line
-    max_line_gap = 20  # maximum gap in pixels between connectable line segments
-    line_image = np.copy(iImage) * 0  # creating a blank to draw lines on
-
-    # Run Hough on edge detected image
-    # Output "lines" is an array containing endpoints of detected line segments
-    lines = cv.HoughLinesP(edges, rho, theta, threshold, np.array([]),
-                            min_line_length, max_line_gap)
-
-    for line in lines:
-        for x1, y1, x2, y2 in line:
-            cv.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
-
-    lines_edges = cv.addWeighted(iImage, 0.8, line_image, 1, 0)
-    # print(lines_edges)
-    iImage_red = lines_edges
-
-
-    ##pocistimo prejsno sliko ki je pikazana
-    plt.clf()
-    # kaj želimo pokazati na platnu
-    plt.imshow(lines_edges)
-
-    # posodobi platno/sliko
-    canvas.draw()
-    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+    preds_test_t = razgradnja(iImage)
+    pokritost_cebel = np.count_nonzero(preds_test_t)  ##poda st pixlov ki jih pokrivajo cebele
+    st_pixlu = (iImage.size) / 3
+    pokritost_cebel_procent = pokritost_cebel/st_pixlu
+    print('stevilo pixlov Unet', np.count_nonzero(preds_test_t))
 
 def savefile():
     filename_save = filedialog.asksaveasfilename(defaultextension=".png")
@@ -240,68 +210,65 @@ def izracun_st_cebel():
     global iImage
     global st_cebel
 
-    ##stevilo rdecih pixlov
-    r = ((255 <= iImage_red[:, :, 0])).sum()
-    print("rdece", r)
-
     ##stevilo vseh pixlov
     st_pixlu = (iImage.size)/3
     print(st_pixlu)
-    razmerje = (r/st_pixlu)
-    print("razmerje:", razmerje)
-    povrsina_cebele = 3500
-    print(1.4-razmerje)
-    st_cebel = ((r / povrsina_cebele) - (950 * (1.25 - razmerje)))*1
+    povrsina_cebele = 9500
+    print(povrsina_cebele)
+
+    st_cebel = pokritost_cebel/povrsina_cebele
+
+    # st_cebel = ((r / povrsina_cebele) - (950 * (1.25 - razmerje)))*1
     print('stevilo cebel:', st_cebel)
 
 
-def oznaci_cebela():
-    global cebela
-    cebela = []
-
-    global cid
-    cid = fig.canvas.mpl_connect('button_press_event', onclick2)
-
-def onclick2(event):
-    ix2, iy2 = event.xdata, event.ydata
-    print(ix2, iy2)
-
-    global cebela
-    cebela.append((ix2, iy2))
-
-    # kaj želimo pokazati na platnu
-    plt.imshow(iImage)
-    plt.plot(ix2, iy2, 'or', markersize=2.0)
-
-    # posodobi platno/sliko
-    canvas.draw()
-    canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-
-    # print('stevilo cebel', len(cebela))
-    global cid
-    if len(cebela) == 4:
-        fig.canvas.mpl_disconnect(cid)
-    return cebela
-
-def izracun_povrsine_cebela():
-    global povrsina_cebele
-    # print('cebela:', cebela)
-    cebela2 = np.array(cebela, dtype=int)
-    # print('cebela 2', cebela2)
-    cebela2 = cebela2.transpose()
-    # print('Cebela 2 transpose',cebela2)
-
-    razdalja_X_2_3 = abs(cebela2[0,2] - cebela2[0,3])
-    razdalja_Y_2_3 = abs(cebela2[1, 2] - cebela2[1, 3])
-    razdalja_tock_2_3 = (np.sqrt(razdalja_X_2_3 ** 2 + razdalja_Y_2_3 ** 2))
-
-    razdalja_X_1_2 = abs(cebela2[0, 0] - cebela2[0, 1])
-    razdalja_Y_1_2 = abs(cebela2[1, 0] - cebela2[1, 1])
-    razdalja_tock_1_2 = (np.sqrt(razdalja_X_1_2 ** 2 + razdalja_Y_1_2 ** 2))
-
-    povrsina_cebele = razdalja_tock_1_2 * razdalja_tock_2_3
-    print('Povrsina cebele:',povrsina_cebele)
-    # return povrsina_cebele
+# def oznaci_cebela():
+#     global cebela
+#     cebela = []
+#
+#     global cid
+#     cid = fig.canvas.mpl_connect('button_press_event', onclick2)
+#
+# def onclick2(event):
+#     ix2, iy2 = event.xdata, event.ydata
+#     print(ix2, iy2)
+#
+#     global cebela
+#     cebela.append((ix2, iy2))
+#
+#     # kaj želimo pokazati na platnu
+#     plt.imshow(iImage)
+#     plt.plot(ix2, iy2, 'or', markersize=2.0)
+#
+#     # posodobi platno/sliko
+#     canvas.draw()
+#     canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+#
+#     # print('stevilo cebel', len(cebela))
+#     global cid
+#     if len(cebela) == 4:
+#         fig.canvas.mpl_disconnect(cid)
+#     return cebela
+#
+# def izracun_povrsine_cebela():
+#     global povrsina_cebele
+#     # print('cebela:', cebela)
+#     cebela2 = np.array(cebela, dtype=int)
+#     # print('cebela 2', cebela2)
+#     cebela2 = cebela2.transpose()
+#     # print('Cebela 2 transpose',cebela2)
+#
+#     razdalja_X_2_3 = abs(cebela2[0,2] - cebela2[0,3])
+#     razdalja_Y_2_3 = abs(cebela2[1, 2] - cebela2[1, 3])
+#     razdalja_tock_2_3 = (np.sqrt(razdalja_X_2_3 ** 2 + razdalja_Y_2_3 ** 2))
+#
+#     razdalja_X_1_2 = abs(cebela2[0, 0] - cebela2[0, 1])
+#     razdalja_Y_1_2 = abs(cebela2[1, 0] - cebela2[1, 1])
+#     razdalja_tock_1_2 = (np.sqrt(razdalja_X_1_2 ** 2 + razdalja_Y_1_2 ** 2))
+#
+#     povrsina_cebele = razdalja_tock_1_2 * razdalja_tock_2_3
+#     print('Povrsina cebele:',povrsina_cebele)
+#     # return povrsina_cebele
 
 def _quit():
     global MainWin
@@ -376,22 +343,22 @@ class CebeleGUI:
         self.button_save_img.place(x=x_smer_gumbi, y=razmak * 5)
 
         ## 9
-        self.button_maska = Button(sidemenu, text="Pokazi masko", command=self.potrdi_maska, width=20, height=3)
+        self.button_maska = Button(sidemenu, text="Izracuni st cebel", command=self.potrdi_maska, width=20, height=3)
         self.button_maska.place(x=x_smer_gumbi, y=razmak*6)
 
-        ## 10
-        self.button_oznaci_cebela = Button(sidemenu, text="Oznaci cebelo", command=self.potrdi_oznaci_cebela, width=20, height=3)
-        self.button_oznaci_cebela.place(x=x_smer_gumbi, y=razmak * 7)
-
-        ## 11
-        self.button_izracun_povrsine_cebela = Button(sidemenu, text="Izracuni velikost cebele",
-                                                     command=self.potrdi_izracun_povrsine_cebela, width=20, height=3)
-        self.button_izracun_povrsine_cebela.place(x=x_smer_gumbi, y=razmak * 8)
-
-        ## 12
-        self.button_izracun_st_cebela = Button(sidemenu, text="Izracun stevila cebel",
-                                               command=self.potrdi_izracun_st_cebela, width=20, height=3)
-        self.button_izracun_st_cebela.place(x=x_smer_gumbi, y=razmak * 9)
+        # ## 10
+        # self.button_oznaci_cebela = Button(sidemenu, text="Oznaci cebelo", command=self.potrdi_oznaci_cebela, width=20, height=3)
+        # self.button_oznaci_cebela.place(x=x_smer_gumbi, y=razmak * 7)
+        #
+        # ## 11
+        # self.button_izracun_povrsine_cebela = Button(sidemenu, text="Izracuni velikost cebele",
+        #                                              command=self.potrdi_izracun_povrsine_cebela, width=20, height=3)
+        # self.button_izracun_povrsine_cebela.place(x=x_smer_gumbi, y=razmak * 8)
+        #
+        # ## 12
+        # self.button_izracun_st_cebela = Button(sidemenu, text="Izracun stevila cebel",
+        #                                        command=self.potrdi_izracun_st_cebela, width=20, height=3)
+        # self.button_izracun_st_cebela.place(x=x_smer_gumbi, y=razmak * 9)
 
         ## END
         self.izpis = Text(sidemenu, width=50, height=15)
@@ -438,7 +405,15 @@ class CebeleGUI:
         self.izpis.insert(END, 'Izvedli ste porovnavo\n')
 
     def potrdi_maska(self):
-        Enhance_linear()
+        razgradnja_slike_ai()
+        self.izpis.insert(END, 'Izvedli ste razgradnjo slike: \n')
+        self.izpis.insert(END, 'Cebele pokrivajo:')
+        self.izpis.insert(END, pokritost_cebel_procent)
+        self.izpis.insert(END, ' stopinj\n')
+        izracun_st_cebel()
+        self.izpis.insert(END, 'Na sliki je:')
+        self.izpis.insert(END, st_cebel)
+        self.izpis.insert(END, 'cebel:\n')
 
     def rotate(self):
         st_rotacij = self.vnos_st_rotacij.get()
@@ -448,25 +423,25 @@ class CebeleGUI:
         self.izpis.insert(END, st_rotacij)
         self.izpis.insert(END, ' stopinj\n')
 
-    def potrdi_izracun_st_cebela(self):
-        izracun_st_cebel()
-        self.izpis.insert(END, 'Na sliki je:')
-        self.izpis.insert(END, st_cebel)
-        self.izpis.insert(END, 'cebel:\n')
+    # def potrdi_izracun_st_cebela(self):
+    #     izracun_st_cebel()
+    #     self.izpis.insert(END, 'Na sliki je:')
+    #     self.izpis.insert(END, st_cebel)
+    #     self.izpis.insert(END, 'cebel:\n')
 
-    def potrdi_oznaci_cebela(self):
-        oznaci_cebela()
-        self.izpis.insert(END, 'Oznacite tocke po vrstnm redu:\n')
-        self.izpis.insert(END, '#1  #2\n')
-        self.izpis.insert(END, '\n')
-        self.izpis.insert(END, '\n')
-        self.izpis.insert(END, '#4  #3\n')
-
-    def potrdi_izracun_povrsine_cebela(self):
-        izracun_povrsine_cebela()
-        self.izpis.insert(END, 'Velikost cebele je:\n')
-        self.izpis.insert(END, povrsina_cebele)
-        self.izpis.insert(END, 'pixlov:\n')
+    # def potrdi_oznaci_cebela(self):
+    #     oznaci_cebela()
+    #     self.izpis.insert(END, 'Oznacite tocke po vrstnm redu:\n')
+    #     self.izpis.insert(END, '#1  #2\n')
+    #     self.izpis.insert(END, '\n')
+    #     self.izpis.insert(END, '\n')
+    #     self.izpis.insert(END, '#4  #3\n')
+    #
+    # def potrdi_izracun_povrsine_cebela(self):
+    #     izracun_povrsine_cebela()
+    #     self.izpis.insert(END, 'Velikost cebele je:\n')
+    #     self.izpis.insert(END, povrsina_cebele)
+    #     self.izpis.insert(END, 'pixlov:\n')
 
 
     def potrdi_quit(self):
