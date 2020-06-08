@@ -12,7 +12,7 @@ Projekt pri predmetu Robotski vid
 Projekt je nastal kot seminar v poletnem semestru 1. letnika magisterskega študija smer robotika pri predmetu Robotski vid. 
 Seminarska naloga je nastala v sodelovanju s kmetijskim inštitutom slovenije
 
-Mentor: As. dr. Žiga Špiclin
+Mentor: doc. dr. Žiga Špiclin
 
 Avtor slik : doc. dr. Janez Prešern
 
