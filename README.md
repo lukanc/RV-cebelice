@@ -38,9 +38,22 @@ Ko smo označili 8 točk v vrstnem redu kot piše v programu:
 7. Po poravnavi pritisnemo tipko Izracun st cebel
 8. Program nam vrne število čebel na poravnani sliki.
 
-
+---
 ### Avtorja
 
 Tilen Kočevar tk2614@student.uni-lj.si
 
 Luka Kresnik lk1712@student.uni-lj.si
+
+---
+
+## Requirements 
+
+* cv2
+* scipy
+* matplotlib
+* PIL
+* Numpy
+* tkinter
+* keras
+* Tensorflow
